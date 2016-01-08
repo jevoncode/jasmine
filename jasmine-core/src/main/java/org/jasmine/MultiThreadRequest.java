@@ -9,26 +9,33 @@ import org.apache.http.HttpEntity;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.protocol.HttpClientContext;
 import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
+import org.apache.http.protocol.HttpContext;
 import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class RealTimeRequest extends Request {
-	private static CloseableHttpClient httpclient = HttpClients.createDefault();
-	private Logger log = LoggerFactory.getLogger(RealTimeRequest.class);
+public class MultiThreadRequest extends Request {
+	private Logger log = LoggerFactory.getLogger(MultiThreadRequest.class);
+	private final CloseableHttpClient httpClient;
+	private final HttpContext context;
+	private final HttpGet httpget;
 
-	public void doRequest(String interfaceUrl, String getParams, int taskId, Date submitTime) {
+	public MultiThreadRequest(CloseableHttpClient httpClient, HttpGet httpget) {
+		this.httpClient = httpClient;
+		this.context = HttpClientContext.create();
+		this.httpget = httpget;
+	}
+
+	public void doRequest(int taskId, Date submitTime) {
 		long begin = System.currentTimeMillis();
 		log.info("执行任务taskId=" + taskId);
-		String url = interfaceUrl + getParams;
+		String url = httpget.getURI().toString();
 		log.info("请求地址:" + url);
-		HttpGet httpget = new HttpGet(url);
-
 		CloseableHttpResponse response = null;
 		try {
-			response = httpclient.execute(httpget);
+			response = httpClient.execute(httpget, context);
 			HttpEntity entity = response.getEntity();
 			if (entity != null) {
 				String strData = EntityUtils.toString(entity);
@@ -58,5 +65,4 @@ public class RealTimeRequest extends Request {
 		long end = System.currentTimeMillis();
 		log.info("用时:" + (end - begin) + "ms");
 	}
-
 }

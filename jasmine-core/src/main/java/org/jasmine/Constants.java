@@ -4,7 +4,7 @@ public class Constants {
 	/**
 	 * 线程池数量
 	 */
-	public static int THREAD_POOL_COUNT = 1250;
+	public static int THREAD_POOL_COUNT = 200;
 	/**
 	 * 每次获取股票的个数 （测试过,最大为890个）
 	 */

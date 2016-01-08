@@ -37,12 +37,33 @@ public class Jasmine implements Job {
 		Scheduler sched = sf.getScheduler();
 		JobDetail job = newJob(Jasmine.class).withIdentity("job3", "group1").build();
 		CronTrigger trigger = newTrigger().withIdentity("trigger3", "group1")
-				.withSchedule(cronSchedule("0/2 * 9-16 * * ?")).build();
+				.withSchedule(cronSchedule("0 0/3 * * * ?")).build();
 		sched.scheduleJob(job, trigger);
 		sched.start();
+//		new Jasmine().doOneJobSync();
+//		new Jasmine().doOneJobAsyn();
 	}
 
-	private void doOneJob() {
+	private void doOneJobSync() {
+		long begin = System.currentTimeMillis();
+		Date now = new Date();
+		for (Entry<Integer, List<String>> taskParams : paramsMap.entrySet()) {
+			StringBuffer getParams = new StringBuffer();
+			String delim = "";
+			for (String code : taskParams.getValue()) {
+				getParams.append(delim).append(code);
+				delim = ",";
+			}
+
+			int taskId = taskParams.getKey();
+			new RealTimeRequest().doRequest(Constants.INTERFACE_URL, getParams.toString(), taskId, now);
+		}
+		long end = System.currentTimeMillis();
+
+		log.info("总共用时:" + (end - begin) + "ms");
+	}
+
+	private void doOneJobAsyn() {
 		Date now = new Date();
 		for (Entry<Integer, List<String>> taskParams : paramsMap.entrySet()) {
 			StringBuffer getParams = new StringBuffer();
@@ -96,6 +117,6 @@ public class Jasmine implements Job {
 
 	public void execute(JobExecutionContext arg0) throws JobExecutionException {
 		System.out.println("执行定时任务");
-		doOneJob();
+		doOneJobAsyn();
 	}
 }
